@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.todoapp.data.model.NoteEntity
 import com.example.todoapp.data.repository.NoteRepository
+import com.example.todoapp.utils.DataStatus
 import com.example.todoapp.utils.EDUCATION
 import com.example.todoapp.utils.HEALTH
 import com.example.todoapp.utils.HIGH
@@ -17,20 +18,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 @HiltViewModel
-class NoteViewModel @Inject constructor(
-    private val repository: NoteRepository
-) : ViewModel() {
+class NoteViewModel @Inject constructor(private val repository: NoteRepository) : ViewModel() {
     //Spinners
     val categoriesList = MutableLiveData<MutableList<String>>()
     val prioritiesList = MutableLiveData<MutableList<String>>()
+    val noteData = MutableLiveData<DataStatus<NoteEntity>>()
 
     fun loadCategoriesData() = viewModelScope.launch(Dispatchers.IO) {
-        val data = mutableListOf<String>(WORK, EDUCATION, HOME, HEALTH)
+        val data = mutableListOf(WORK, EDUCATION, HOME, HEALTH)
         categoriesList.postValue(data)
     }
 
     fun loadPrioritiesData() = viewModelScope.launch(Dispatchers.IO) {
-        val data = mutableListOf<String>(HIGH, NORMAL, LOW)
+        val data = mutableListOf(HIGH, NORMAL, LOW)
         prioritiesList.postValue(data)
     }
 
@@ -39,6 +39,12 @@ class NoteViewModel @Inject constructor(
             repository.updateNote(entity)
         } else {
             repository.saveNote(entity)
+        }
+    }
+
+    fun getData(id: Int) = viewModelScope.launch {
+        repository.getNote(id).collect {
+            noteData.postValue(DataStatus.success(it, false))
         }
     }
 }

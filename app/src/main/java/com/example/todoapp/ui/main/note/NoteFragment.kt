@@ -5,12 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import com.example.todoapp.R
+import com.example.todoapp.data.model.NoteEntity
 import com.example.todoapp.databinding.FragmentNoteBinding
 import com.example.todoapp.utils.setupListWithAdapter
 import com.example.todoapp.viewmodel.NoteViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class NoteFragment : BottomSheetDialogFragment() {
@@ -18,6 +19,8 @@ class NoteFragment : BottomSheetDialogFragment() {
     private var _binding: FragmentNoteBinding? = null
     private val binding get() = _binding
 
+    @Inject
+    lateinit var entity: NoteEntity
 
     //Other
     private val viewModel: NoteViewModel by viewModels()
@@ -35,6 +38,8 @@ class NoteFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         //InitViews
         binding?.apply {
+            //Close
+            closeImg.setOnClickListener { dismiss() }
             //Spinner Category
             viewModel.loadCategoriesData()
             viewModel.categoriesList.observe(viewLifecycleOwner) {
@@ -48,6 +53,21 @@ class NoteFragment : BottomSheetDialogFragment() {
                 prioritySpinner.setupListWithAdapter(it) { itItem ->
                     priority = itItem
                 }
+            }
+            //Click
+            saveNote.setOnClickListener {
+                val title = titleEdt.text.toString()
+                val desc = descEdt.text.toString()
+                entity.id = 0
+                entity.title = title
+                entity.desc = desc
+                entity.category = category
+                entity.priority = priority
+
+                if (title.isNotEmpty() && desc.isNotEmpty()) {
+                    viewModel.saveEditNote(false, entity)
+                }
+                dismiss()
             }
         }
     }
